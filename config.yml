@@ -1,0 +1,141 @@
+# PostgreSQL Docker Configuration
+# Configuración para habilitar/deshabilitar características
+
+# Configuración básica
+basic:
+  postgresql:
+    enabled: true
+    version: "15"
+    port: 5432
+    user: "postgres"
+    password: "postgres123"
+    database: "postgres"
+  
+  pgadmin:
+    enabled: true
+    port: 8080
+    email: "admin@postgresql.local"
+    password: "admin123"
+
+# Configuración de monitoreo
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+    port: 9090
+    retention: "15d"
+  
+  grafana:
+    enabled: true
+    port: 3000
+    admin_user: "admin"
+    admin_password: "admin123"
+  
+  exporters:
+    postgresql_exporter:
+      enabled: true
+      port: 9187
+    
+    node_exporter:
+      enabled: false
+      port: 9100
+    
+    cadvisor:
+      enabled: false
+      port: 8080
+
+# Configuración de replicación
+replication:
+  enabled: false  # Cambiar a true para habilitar replicación
+  mode: "master-slave"  # master-slave o master-master
+  replica_count: 1
+  replica_config:
+    user: "replicator"
+    password: "replicator123"
+    port: 5432
+    database: "postgres"
+  
+  # Configuración de streaming replication
+  streaming:
+    enabled: true
+    wal_level: "replica"
+    max_wal_senders: 3
+    max_replication_slots: 3
+    hot_standby: true
+    hot_standby_feedback: true
+
+# Configuración de clustering
+clustering:
+  enabled: false  # Cambiar a true para habilitar clustering
+  mode: "standalone"  # standalone, replica, cluster
+  nodes: 1
+  load_balancer:
+    enabled: false
+    port: 5433
+    algorithm: "round_robin"
+
+# Configuración de backup
+backup:
+  enabled: true
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  retention_days: 7
+  compression: true
+  encryption: false
+
+# Configuración de seguridad
+security:
+  ssl:
+    enabled: false
+    cert_file: "/etc/ssl/certs/postgresql.crt"
+    key_file: "/etc/ssl/private/postgresql.key"
+  
+  network:
+    allowed_ips: ["0.0.0.0/0"]
+    denied_ips: []
+  
+  authentication:
+    method: "scram-sha-256"
+    password_encryption: "scram-sha-256"
+
+# Configuración de performance
+performance:
+  shared_buffers: "256MB"
+  effective_cache_size: "1GB"
+  work_mem: "4MB"
+  maintenance_work_mem: "64MB"
+  checkpoint_completion_target: 0.9
+  wal_buffers: "16MB"
+  max_connections: 100
+
+# Configuración de logging
+logging:
+  level: "info"
+  log_statement: "all"
+  log_min_duration_statement: 1000
+  log_checkpoints: true
+  log_connections: true
+  log_disconnections: true
+  log_lock_waits: true
+  log_temp_files: 0
+
+# Configuración de alertas
+alerts:
+  enabled: true
+  email:
+    enabled: false
+    smtp_server: "localhost"
+    smtp_port: 587
+    username: ""
+    password: ""
+    from: "alerts@postgresql.local"
+    to: ["admin@postgresql.local"]
+  
+  slack:
+    enabled: false
+    webhook_url: ""
+    channel: "#alerts"
+  
+  webhook:
+    enabled: false
+    url: ""
+    timeout: 10

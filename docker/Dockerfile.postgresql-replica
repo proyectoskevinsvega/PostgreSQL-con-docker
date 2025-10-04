@@ -1,0 +1,46 @@
+# PostgreSQL Replica Docker Image
+# Imagen para réplica de PostgreSQL (solo si se habilita replicación)
+
+FROM postgres:15-alpine
+
+# Metadatos
+LABEL maintainer="AKS Ecosystem"
+LABEL description="PostgreSQL 15 Replica con configuraciones para replicación"
+LABEL version="1.0"
+
+# Variables de entorno para réplica
+ENV POSTGRES_DB=postgres
+ENV POSTGRES_USER=postgres
+ENV POSTGRES_PASSWORD=postgres123
+ENV POSTGRES_REPLICATION_MODE=slave
+ENV POSTGRES_REPLICATION_USER=replicator
+ENV POSTGRES_REPLICATION_PASSWORD=replicator123
+ENV POSTGRES_MASTER_HOST=postgresql-db
+ENV POSTGRES_MASTER_PORT=5432
+
+# Instalar herramientas adicionales
+RUN apk add --no-cache \
+    curl \
+    vim \
+    nano \
+    htop \
+    postgresql-contrib
+
+# Crear directorio para scripts de inicialización
+RUN mkdir -p /docker-entrypoint-initdb.d
+
+# Copiar scripts de inicialización para réplica
+COPY init-scripts/ /docker-entrypoint-initdb.d/
+
+# Configurar permisos
+RUN chmod +x /docker-entrypoint-initdb.d/*.sh
+
+# Exponer puerto
+EXPOSE 5432
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD pg_isready -U $POSTGRES_USER -d $POSTGRES_DB || exit 1
+
+# Comando por defecto
+CMD ["postgres"]

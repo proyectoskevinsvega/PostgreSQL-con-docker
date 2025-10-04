@@ -1,0 +1,42 @@
+# PostgreSQL Docker Image
+# Basado en PostgreSQL 15 oficial con configuraciones personalizadas
+
+FROM postgres:15-alpine
+
+# Metadatos
+LABEL maintainer="AKS Ecosystem"
+LABEL description="PostgreSQL 15 con configuraciones personalizadas para desarrollo"
+LABEL version="1.0"
+
+# Variables de entorno
+ENV POSTGRES_DB=postgres
+ENV POSTGRES_USER=postgres
+ENV POSTGRES_PASSWORD=postgres123
+ENV POSTGRES_INITDB_ARGS="--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+
+# Instalar herramientas adicionales
+RUN apk add --no-cache \
+    curl \
+    vim \
+    nano \
+    htop \
+    postgresql-contrib
+
+# Crear directorio para scripts de inicialización
+RUN mkdir -p /docker-entrypoint-initdb.d
+
+# Copiar scripts de inicialización
+COPY init-scripts/ /docker-entrypoint-initdb.d/
+
+# Configurar permisos
+RUN chmod +x /docker-entrypoint-initdb.d/*.sh
+
+# Exponer puerto
+EXPOSE 5432
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD pg_isready -U $POSTGRES_USER -d $POSTGRES_DB || exit 1
+
+# Comando por defecto
+CMD ["postgres"]

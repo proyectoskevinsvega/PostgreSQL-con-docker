@@ -1,0 +1,107 @@
+# PostgreSQL Alerting Rules
+# Reglas de alertas para PostgreSQL
+
+groups:
+  - name: postgresql
+    rules:
+      # PostgreSQL Down
+      - alert: PostgreSQLDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL instance {{ $labels.instance }} has been down for more than 1 minute."
+
+      # PostgreSQL High Connections
+      - alert: PostgreSQLHighConnections
+        expr: pg_stat_database_numbackends / pg_settings_max_connections * 100 > 80
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL high connections"
+          description: "PostgreSQL instance {{ $labels.instance }} has {{ $value }}% connections in use."
+
+      # PostgreSQL Slow Queries
+      - alert: PostgreSQLSlowQueries
+        expr: rate(pg_stat_database_tup_returned[5m]) > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL slow queries"
+          description: "PostgreSQL instance {{ $labels.instance }} has slow queries."
+
+      # PostgreSQL High CPU Usage
+      - alert: PostgreSQLHighCPU
+        expr: rate(pg_stat_database_tup_fetched[5m]) > 5000
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL high CPU usage"
+          description: "PostgreSQL instance {{ $labels.instance }} has high CPU usage."
+
+      # PostgreSQL Disk Space
+      - alert: PostgreSQLDiskSpace
+        expr: (pg_database_size_bytes / 1024 / 1024 / 1024) > 80
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL disk space warning"
+          description: "PostgreSQL database {{ $labels.datname }} is using {{ $value }}GB of disk space."
+
+      # PostgreSQL Replication Lag (if replica enabled)
+      - alert: PostgreSQLReplicationLag
+        expr: pg_replication_lag > 30
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL replication lag"
+          description: "PostgreSQL replica {{ $labels.instance }} has {{ $value }} seconds of replication lag."
+
+      # PostgreSQL Replication Down (if replica enabled)
+      - alert: PostgreSQLReplicationDown
+        expr: pg_replication_is_replica == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL replication is down"
+          description: "PostgreSQL replica {{ $labels.instance }} is not replicating."
+
+  - name: system
+    rules:
+      # High Memory Usage
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 85
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is above 85% on {{ $labels.instance }}."
+
+      # High CPU Usage
+      - alert: HighCPUUsage
+        expr: 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is above 80% on {{ $labels.instance }}."
+
+      # Disk Space Warning
+      - alert: DiskSpaceWarning
+        expr: (node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes * 100 > 85
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk space warning"
+          description: "Disk usage is above 85% on {{ $labels.instance }}."

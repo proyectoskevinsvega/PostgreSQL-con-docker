@@ -1,0 +1,31 @@
+# pgAdmin4 Docker Image
+# Panel de gestión web para PostgreSQL
+
+FROM dpage/pgadmin4:latest
+
+# Metadatos
+LABEL maintainer="AKS Ecosystem"
+LABEL description="pgAdmin4 - Panel de gestión web para PostgreSQL"
+LABEL version="1.0"
+
+# Variables de entorno
+ENV PGADMIN_DEFAULT_EMAIL=admin@postgresql.local
+ENV PGADMIN_DEFAULT_PASSWORD=admin123
+ENV PGADMIN_CONFIG_SERVER_MODE=False
+ENV PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+
+# Configurar pgAdmin
+ENV PGADMIN_CONFIG_WTF_CSRF_ENABLED=False
+ENV PGADMIN_CONFIG_SESSION_COOKIE_SECURE=False
+ENV PGADMIN_CONFIG_SESSION_COOKIE_HTTPONLY=False
+ENV PGADMIN_CONFIG_SESSION_COOKIE_SAMESITE=Lax
+
+# Exponer puerto
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:80/misc/ping || exit 1
+
+# Comando por defecto
+CMD ["python", "pgAdmin4.py"]
